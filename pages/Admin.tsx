@@ -303,7 +303,7 @@ const Admin: React.FC = () => {
                             </button>
                           </div>
                         ))}
-                      </div>
+                  </div>
                   </div>
 
                   <div className="pt-4">
@@ -399,7 +399,18 @@ const Admin: React.FC = () => {
         ) : (
             restaurants.map(r => (
                 <div key={r.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
-                    <img src={r.images[0]} alt="" className="w-16 h-16 rounded-lg object-cover bg-gray-200 shrink-0" />
+                    {r.images?.[0] ? (
+                      <img 
+                        src={r.images[0]} 
+                        alt={r.name} 
+                        className="w-16 h-16 rounded-lg object-cover bg-gray-200 shrink-0"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xs">
+                        No Image
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-gray-900 truncate">{r.name}</h3>
                         <p className="text-xs text-gray-500 truncate">{r.address}</p>

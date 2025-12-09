@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search as SearchIcon, Loader2, MapPin } from 'lucide-react';
 import { getSavedRestaurants, toggleSavedRestaurant } from '../services/db';
 import { searchRestaurants } from '../services/gemini';
+import { getLocationWithFallback } from '../services/location';
 import RestaurantCard from '../components/RestaurantCard';
 import RestaurantDetail from '../components/RestaurantDetail';
 import { Restaurant } from '../types';
@@ -13,18 +14,22 @@ const Search: React.FC = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [locationHint, setLocationHint] = useState<string>('');
 
   useEffect(() => {
     const saved = getSavedRestaurants();
     setSavedIds(new Set(saved.map(r => r.id)));
 
     // Get Location for search context
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => console.log("Search: No location", err)
-        );
-    }
+    void (async () => {
+        const { coords, error } = await getLocationWithFallback();
+        if (coords) {
+            setLocation(coords);
+        }
+        if (error) {
+            setLocationHint(error);
+        }
+    })();
   }, []);
 
   // Debounce search
@@ -87,6 +92,11 @@ const Search: React.FC = () => {
          <MapPin size={12} />
          {location ? "Searching near your location" : "Searching globally (Enable GPS for better results)"}
       </div>
+      {locationHint && (
+        <div className="text-[11px] text-red-500 px-2 pb-2">
+            {locationHint}
+        </div>
+      )}
 
       <div className="space-y-4">
         {!loading && query && results.length === 0 && (

@@ -2,9 +2,29 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { SlidersHorizontal, X, MapPin, Loader2, RotateCcw, Navigation } from 'lucide-react';
 import { getSavedRestaurants, toggleSavedRestaurant } from '../services/db';
 import { searchRestaurants } from '../services/gemini';
+import { getLocationWithFallback } from '../services/location';
 import RestaurantCard from '../components/RestaurantCard';
 import RestaurantDetail from '../components/RestaurantDetail';
 import { Restaurant, SortOption } from '../types';
+
+type HomeCache = {
+  restaurants: Restaurant[];
+  currentLocation: { lat: number; lng: number } | null;
+  locationError: string;
+  sort: SortOption;
+  openNow: boolean;
+  savedIds: Set<string>;
+};
+
+// Keep last Home state in memory so navigation away/return preserves list until user refreshes.
+let homeCache: HomeCache = {
+  restaurants: [],
+  currentLocation: null,
+  locationError: '',
+  sort: 'rating_high',
+  openNow: false,
+  savedIds: new Set(),
+};
 
 const Home: React.FC = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -25,38 +45,50 @@ const Home: React.FC = () => {
   useEffect(() => {
     const saved = getSavedRestaurants();
     setSavedIds(new Set(saved.map(r => r.id)));
-    
+
+    // If we have cached data (navigated away and back), hydrate instead of re-fetching.
+    if (homeCache.restaurants.length > 0) {
+      setRestaurants(homeCache.restaurants);
+      setCurrentLocation(homeCache.currentLocation);
+      setLocationError(homeCache.locationError);
+      setSort(homeCache.sort);
+      setOpenNow(homeCache.openNow);
+      setSavedIds(new Set(homeCache.savedIds));
+      return;
+    }
+
     // Initial fetch with location
-    handleRefreshLocation();
+    void handleRefreshLocation();
   }, []);
 
-  const handleRefreshLocation = () => {
+  // Persist latest state into in-memory cache so it survives page switches.
+  useEffect(() => {
+    homeCache = {
+      restaurants,
+      currentLocation,
+      locationError,
+      sort,
+      openNow,
+      savedIds,
+    };
+  }, [restaurants, currentLocation, locationError, sort, openNow, savedIds]);
+
+  const handleRefreshLocation = async () => {
       setLoading(true);
       setLocationError('');
       
-      if (!navigator.geolocation) {
-          setLocationError("Geolocation is not supported by your browser");
-          fetchData("Downtown"); // Fallback
-          return;
+      const { coords, error } = await getLocationWithFallback();
+
+      if (error) {
+          setLocationError(error);
       }
 
-      navigator.geolocation.getCurrentPosition(
-          (position) => {
-              const loc = {
-                  lat: position.coords.latitude,
-                  lng: position.coords.longitude
-              };
-              setCurrentLocation(loc);
-              fetchData(loc);
-          },
-          (error) => {
-              console.error("Geo Error", error);
-              setLocationError("Unable to retrieve your location");
-              // Fallback to a default search if GPS fails
-              fetchData("Downtown");
-          },
-          { enableHighAccuracy: true, timeout: 5000 }
-      );
+      if (coords) {
+          setCurrentLocation(coords);
+          await fetchData(coords);
+      } else {
+          await fetchData("Downtown"); // Fallback
+      }
   };
 
   const fetchData = async (locationOrArea: string | {lat: number, lng: number}) => {
@@ -121,7 +153,11 @@ const Home: React.FC = () => {
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-500 bg-gray-100 p-2 rounded-lg w-fit transition-all">
                 <Navigation size={14} className={`text-primary ${loading ? 'animate-pulse' : ''}`} />
                 <span className="font-medium text-gray-700">
-                    {locationError ? 'Location Unavailable' : loading ? 'Locating...' : 'Current Location'}
+                    {loading 
+                        ? 'Locating...' 
+                        : locationError 
+                            ? currentLocation ? 'Using approximate location' : 'Location Unavailable' 
+                            : 'Current Location'}
                 </span>
             </div>
         </div>

@@ -378,8 +378,8 @@ const GroupDetailView = ({ group, user, onBack, onStart, onHistory, onEdit, load
     };
 
     return (
-        <div className="p-6 pt-8 min-h-screen bg-gray-50 pb-40">
-            <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4 mb-6">
+    <div className="p-4 pt-8 min-h-screen bg-gradient-to-b from-red-50/60 via-white to-white pb-52">
+            <div className="bg-white rounded-3xl p-6 shadow-lg space-y-4 mb-6 border border-gray-100">
                 <div className="flex justify-between items-start">
                      <h1 className="text-2xl font-bold text-gray-900">{group.name}</h1>
                      <button onClick={onEdit} className="text-primary text-xs font-bold bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition-colors">Edit</button>
@@ -412,10 +412,10 @@ const GroupDetailView = ({ group, user, onBack, onStart, onHistory, onEdit, load
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+            <div className="bg-white rounded-3xl p-6 shadow-lg space-y-4 border border-gray-100">
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wide">Your name in this group</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 items-stretch">
                         <input 
                             value={tempDisplayName}
                             onChange={e => setTempDisplayName(e.target.value)}
@@ -477,30 +477,34 @@ const GroupDetailView = ({ group, user, onBack, onStart, onHistory, onEdit, load
                 </div>
             </div>
 
-            <div className="fixed bottom-20 left-4 right-4 flex gap-3 items-center justify-between z-40">
-                 <button onClick={onBack} className="px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-gray-600 shadow-md">Back</button>
-                 <button onClick={onHistory} className="px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-gray-600 flex items-center justify-center gap-2 shadow-md">
-                    <History size={18} /> History
-                 </button>
-                 <button
-                    onClick={() => {
-                        const updatedMembers = group.members.filter(m => m.id !== user.id);
-                        const updated = { ...group, members: updatedMembers };
-                        saveGroup(updated);
-                        onBack();
-                    }}
-                    className="px-6 py-3 bg-white border border-red-200 text-red-500 rounded-xl font-bold shadow-md"
-                 >
-                    Leave
-                 </button>
-                 <button 
-                    onClick={handleStartClick} 
-                    disabled={loading}
-                    className="flex-1 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-red-200 disabled:opacity-70 flex items-center justify-center gap-2"
-                >
-                    {loading ? <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" /> : <Sparkles size={18} />}
-                    {loading ? "Finding..." : "Start"}
-                </button>
+            <div className="fixed inset-x-3 sm:inset-x-6 bottom-24 sm:bottom-20 z-40">
+                <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl border border-gray-200 p-3 flex flex-col gap-2">
+                    <div className="grid grid-cols-3 gap-2">
+                        <button onClick={onBack} className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold shadow-sm w-full">Back</button>
+                        <button onClick={onHistory} className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold shadow-sm w-full flex items-center justify-center gap-2">
+                            <History size={18} /> History
+                        </button>
+                        <button
+                            onClick={() => {
+                                const updatedMembers = group.members.filter(m => m.id !== user.id);
+                                const updated = { ...group, members: updatedMembers };
+                                saveGroup(updated);
+                                onBack();
+                            }}
+                            className="px-4 py-3 bg-red-50 text-red-500 rounded-xl font-bold shadow-sm border border-red-100 w-full"
+                        >
+                            Leave
+                        </button>
+                    </div>
+                    <button 
+                        onClick={handleStartClick} 
+                        disabled={loading}
+                        className="w-full py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-red-200 disabled:opacity-70 flex items-center justify-center gap-2"
+                    >
+                        {loading ? <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" /> : <Sparkles size={18} />}
+                        {loading ? "Finding..." : "Start"}
+                    </button>
+                </div>
             </div>
         </div>
     );

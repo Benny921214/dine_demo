@@ -69,6 +69,15 @@ const deg2rad = (deg: number): number => {
   return deg * (Math.PI / 180);
 };
 
+const pickRandom = <T,>(arr: T[], limit: number): T[] => {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, limit);
+};
+
 export const searchRestaurants = async (
   locationOrArea: string | { lat: number; lng: number }, 
   query: string = "popular restaurants",
@@ -78,9 +87,9 @@ export const searchRestaurants = async (
     // Prefer same area for string searches; otherwise just pick top 10 mock entries.
     if (typeof locationOrArea === 'string') {
       const areaMatches = MOCK_RESTAURANTS.filter(r => r.area === locationOrArea);
-      if (areaMatches.length > 0) return areaMatches.slice(0, 10);
+      if (areaMatches.length > 0) return pickRandom(areaMatches, limit);
     }
-    return MOCK_RESTAURANTS.slice(0, 10);
+    return pickRandom(MOCK_RESTAURANTS, limit);
   };
 
   if (!ai) {

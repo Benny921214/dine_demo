@@ -2,7 +2,8 @@
 import { P2PMessage, P2PMessageType, UserProfile } from '../types';
 
 const CHANNEL_NAME = 'dine_decide_p2p_v1';
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8787';
+const defaultHost = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const WS_URL = import.meta.env.VITE_WS_URL || `ws://${defaultHost}:8787`;
 
 class P2PService {
   private channel: BroadcastChannel;
