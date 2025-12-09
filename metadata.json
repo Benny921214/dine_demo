@@ -1,0 +1,7 @@
+{
+  "name": "DineDecide",
+  "description": "A group dining decision app helping friends choose where to eat via swiping.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
